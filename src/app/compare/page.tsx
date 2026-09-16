@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -22,7 +23,7 @@ async function fetchUniversities(ids: string[]) {
   );
 }
 
-export default function ComparePage() {
+function CompareContent() {
   const searchParams = useSearchParams();
   const ids = (searchParams.get("ids") ?? "")
     .split(",")
@@ -90,5 +91,13 @@ export default function ComparePage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense>
+      <CompareContent />
+    </Suspense>
   );
 }
