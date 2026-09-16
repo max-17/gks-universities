@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Filter, GraduationCap, Search } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { FilterCheckboxGroup, FilterCombobox } from "@/components/filters";
@@ -32,16 +33,76 @@ async function fetchUniversities(): Promise<UniversityCardData[]> {
   return response.json();
 }
 
-export default function Home() {
-  const [search, setSearch] = useState("");
+const checkboxFilterParams = {
+  applicationTracks: "applicationTrack",
+  trackTypes: "trackType",
+  degrees: "degree",
+  mediums: "medium",
+} as const;
+
+function HomeContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [departments, setDepartments] = useState<string[]>([]);
-  const [applicationTracks, setApplicationTracks] = useState<string[]>([]);
-  const [trackTypes, setTrackTypes] = useState<string[]>([]);
-  const [degrees, setDegrees] = useState<string[]>([]);
+  const [applicationTracks, setApplicationTracks] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.applicationTracks),
+  );
+  const [trackTypes, setTrackTypes] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.trackTypes),
+  );
+  const [degrees, setDegrees] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.degrees),
+  );
   const [fields, setFields] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
-  const [mediums, setMediums] = useState<string[]>([]);
+  const [mediums, setMediums] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.mediums),
+  );
   const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (search) {
+      params.set("search", search);
+    } else {
+      params.delete("search");
+    }
+    Object.values(checkboxFilterParams).forEach((param) =>
+      params.delete(param),
+    );
+    applicationTracks.forEach((value) =>
+      params.append(checkboxFilterParams.applicationTracks, value),
+    );
+    trackTypes.forEach((value) =>
+      params.append(checkboxFilterParams.trackTypes, value),
+    );
+    degrees.forEach((value) =>
+      params.append(checkboxFilterParams.degrees, value),
+    );
+    mediums.forEach((value) =>
+      params.append(checkboxFilterParams.mediums, value),
+    );
+
+    const query = params.toString();
+    const nextUrl = query ? `${pathname}?${query}` : pathname;
+    const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
+
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [
+    applicationTracks,
+    degrees,
+    mediums,
+    pathname,
+    router,
+    searchParams,
+    search,
+    trackTypes,
+  ]);
   const {
     data: universities = [],
     isLoading,
@@ -364,5 +425,13 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
   );
 }

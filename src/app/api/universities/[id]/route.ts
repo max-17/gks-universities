@@ -18,7 +18,10 @@ export async function GET(
   });
 
   if (!university) {
-    return NextResponse.json({ error: "University not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "University not found." },
+      { status: 404 },
+    );
   }
 
   const formatEnumValue = (value: string) =>
@@ -29,14 +32,28 @@ export async function GET(
   const formatTrackType = (value: string) =>
     value === "UIC" ? "UIC" : formatEnumValue(value);
 
-  const departments = [...new Set(university.programs.map((program) => program.department))];
-  const fields = [...new Set(university.programs.map((program) => program.fieldOfStudy.name))];
-  const degrees = [...new Set(university.programs.map((program) => formatEnumValue(program.degree)))];
+  const departments = [
+    ...new Set(university.programs.map((program) => program.department)),
+  ];
+  const fields = [
+    ...new Set(university.programs.map((program) => program.fieldOfStudy.name)),
+  ];
+  const degrees = [
+    ...new Set(
+      university.programs.map((program) => formatEnumValue(program.degree)),
+    ),
+  ];
   const applicationTracks = [
-    ...new Set(university.programs.map((program) => formatEnumValue(program.applicationTrack))),
+    ...new Set(
+      university.programs.map((program) =>
+        formatEnumValue(program.applicationTrack),
+      ),
+    ),
   ];
   const trackTypes = [
-    ...new Set(university.programs.map((program) => formatTrackType(program.trackType))),
+    ...new Set(
+      university.programs.map((program) => formatTrackType(program.trackType)),
+    ),
   ];
   const trackBadges = [
     ...new Set(

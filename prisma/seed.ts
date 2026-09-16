@@ -6,12 +6,16 @@ import {
   ApplicationTrack,
   TrackType,
   Degree,
-} from "@/../generated/prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+} from "@/../generated/client";
 
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL ?? "",
-});
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+
+const connectionString = process.env.DATABASE_URL;
+
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
 const prisma = new PrismaClient({ adapter });
 
 // In-memory lookup caches to prevent redundant DB calls

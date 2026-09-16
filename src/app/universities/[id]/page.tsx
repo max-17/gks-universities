@@ -4,13 +4,18 @@ import { UniversityDetail } from "@/components/university-detail";
 import type { UniversityDetailData } from "@/lib/university-data";
 
 async function getUniversity(id: string): Promise<UniversityDetailData | null> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/universities/${id}`, { cache: "no-store" });
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/universities/${id}`,
+    { cache: "no-store" },
+  );
   if (response.status === 404) return null;
   if (!response.ok) throw new Error("Unable to load university.");
   return response.json();
 }
 
-export default async function UniversityPage({ params }: PageProps<"/universities/[id]">) {
+export default async function UniversityPage({
+  params,
+}: PageProps<"/universities/[id]">) {
   const { id } = await params;
   const university = await getUniversity(id);
   if (!university) notFound();
