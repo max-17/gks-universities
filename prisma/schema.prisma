@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// schema.prisma
+
+enum ApplicationTrack {
+  EMBASSY
+  UNIVERSITY
+}
+
+enum TrackType {
+  UIC
+  TYPE_A
+  TYPE_B
+  ASSOCIATE
+}
+
+enum Degree {
+  ASSOCIATE
+  BACHELORS
+  MASTERS
+}
+
+model University {
+  id         String       @id @default(cuid())
+  nameKr     String?
+  nameEn     String
+  websiteUrl String?
+  phone      String?
+  remarks    String?
+  location   String?
+  programs   GksProgram[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model FieldOfStudy {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  programs GksProgram[]
+}
+
+model GksProgram {
+  id String @id @default(cuid())
+
+  universityId        String
+  fieldOfStudyId      String
+  applicationTrack    ApplicationTrack
+  trackType           TrackType
+  degree              Degree
+  department          String
+  mediumOfInstruction String?
+  durationYears       Int?
+  requiredTopik       String?
+  programStart        String?
+  university          University       @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  fieldOfStudy        FieldOfStudy     @relation(fields: [fieldOfStudyId], references: [id])
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([universityId])
+  @@index([fieldOfStudyId])
+  @@index([applicationTrack])
+  @@index([trackType])
+  @@index([degree])
+  @@index([department])
+  @@index([mediumOfInstruction])
+}
