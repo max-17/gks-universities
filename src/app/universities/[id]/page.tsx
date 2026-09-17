@@ -93,7 +93,7 @@ async function getUniversity(id: string): Promise<UniversityDetailData | null> {
       degree: formatEnumValue(program.degree),
       department: program.department,
       field: program.fieldOfStudy.name,
-      medium: program.mediumOfInstruction,
+      medium: program.mediumOfInstruction ?? "",
       durationYears: program.durationYears,
       requiredTopik: program.requiredTopik,
       programStart: program.programStart,
