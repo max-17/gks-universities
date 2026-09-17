@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Filter, GraduationCap, Search } from "lucide-react";
+import { Filter, GraduationCap, LoaderCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -383,6 +383,11 @@ function HomeContent() {
               </p>
             </div>
             <div className="grid gap-4">
+              {isLoading && (
+                <div className="flex min-h-48 items-center justify-center" role="status" aria-label="Loading universities">
+                  <LoaderCircle className="size-12 animate-spin text-primary" aria-hidden="true" />
+                </div>
+              )}
               {isError && (
                 <p className="text-sm text-destructive">
                   Unable to load universities. Please try again.
