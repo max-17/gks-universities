@@ -36,7 +36,7 @@ function CompareContent() {
   } = useQuery({
     queryKey: ["compare", ids],
     queryFn: () => fetchUniversities(ids),
-    enabled: ids.length > 0,
+    enabled: ids.length > 0 && typeof window !== "undefined",
   });
 
   return (

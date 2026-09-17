@@ -110,6 +110,7 @@ function HomeContent() {
   } = useQuery({
     queryKey: ["universities"],
     queryFn: fetchUniversities,
+    enabled: typeof window !== "undefined",
   });
 
   const departmentOptions = useMemo(
