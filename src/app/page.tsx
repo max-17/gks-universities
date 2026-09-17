@@ -384,8 +384,15 @@ function HomeContent() {
             </div>
             <div className="grid gap-4">
               {isLoading && (
-                <div className="flex min-h-48 items-center justify-center" role="status" aria-label="Loading universities">
-                  <LoaderCircle className="size-12 animate-spin text-primary" aria-hidden="true" />
+                <div
+                  className="flex min-h-48 items-center justify-center"
+                  role="status"
+                  aria-label="Loading universities"
+                >
+                  <LoaderCircle
+                    className="size-12 animate-spin text-primary"
+                    aria-hidden="true"
+                  />
                 </div>
               )}
               {isError && (
