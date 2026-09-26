@@ -1,8 +1,32 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { UniversityDetailData } from "@/lib/university-data";
+
+export type UniversityDetailFilters = {
+  applicationTracks: string[];
+  trackTypes: string[];
+  degrees: string[];
+  departments: string[];
+  fields: string[];
+  locations: string[];
+  mediums: string[];
+};
+
+const quickFilters = [
+  { label: "University track", key: "applicationTracks", value: "University" },
+  { label: "Embassy track", key: "applicationTracks", value: "Embassy" },
+  { label: "English", key: "mediums", value: "English" },
+  { label: "Korean", key: "mediums", value: "Korean" },
+  { label: "UIC", key: "trackTypes", value: "UIC" },
+  { label: "Associate", key: "trackTypes", value: "Associate" },
+  { label: "Bachelors", key: "degrees", value: "Bachelors" },
+] as const;
 
 function Value({ value }: { value: string | number | null }) {
   return <span>{value || "Not specified"}</span>;
@@ -10,9 +34,72 @@ function Value({ value }: { value: string | number | null }) {
 
 export function UniversityDetail({
   university,
+  initialFilters,
 }: {
   university: UniversityDetailData;
+  initialFilters: UniversityDetailFilters;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [filters, setFilters] = useState(initialFilters);
+  const filteredPrograms = useMemo(
+    () =>
+      university.programs.filter(
+        (program) =>
+          (filters.applicationTracks.length === 0 ||
+            filters.applicationTracks.includes(program.applicationTrack)) &&
+          (filters.trackTypes.length === 0 ||
+            filters.trackTypes.includes(program.trackType)) &&
+          (filters.degrees.length === 0 ||
+            filters.degrees.includes(program.degree)) &&
+          (filters.departments.length === 0 ||
+            filters.departments.includes(program.department)) &&
+          (filters.fields.length === 0 || filters.fields.includes(program.field)) &&
+          (filters.mediums.length === 0 ||
+            filters.mediums.some((medium) =>
+              program.medium.toLocaleLowerCase().includes(medium.toLocaleLowerCase()),
+            )),
+      ),
+    [filters, university.programs],
+  );
+  const applicableQuickFilters = quickFilters.filter((filter) =>
+    university.programs.some((program) => {
+      if (filter.key === "applicationTracks") {
+        return program.applicationTrack === filter.value;
+      }
+      if (filter.key === "trackTypes") {
+        return program.trackType === filter.value;
+      }
+      if (filter.key === "degrees") {
+        return program.degree === filter.value;
+      }
+      return program.medium
+        .toLocaleLowerCase()
+        .includes(filter.value.toLocaleLowerCase());
+    }),
+  );
+
+  function toggleFilter(
+    key: keyof Pick<
+      UniversityDetailFilters,
+      "applicationTracks" | "trackTypes" | "degrees" | "mediums"
+    >,
+    value: string,
+  ) {
+    const nextValues = filters[key].includes(value)
+      ? filters[key].filter((item) => item !== value)
+      : [...filters[key], value];
+    const nextFilters = { ...filters, [key]: nextValues };
+    const params = new URLSearchParams();
+
+    Object.entries(nextFilters).forEach(([filterKey, values]) => {
+      values.forEach((item) => params.append(filterKey.slice(0, -1), item));
+    });
+
+    setFilters(nextFilters);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
+
   return (
     <article className="flex min-w-0 flex-col gap-8">
       <div className="flex flex-col gap-5 border-b pb-6">
@@ -59,12 +146,16 @@ export function UniversityDetail({
         className="grid gap-6 sm:grid-cols-2"
         aria-label="University information"
       >
-        <Info label="Departments" values={university.departments} />
-        <Info label="Fields of study" values={university.fields} />
         <Info label="Mediums of instruction" values={university.mediums} />
         <Info
           label="Contact"
           values={[university.phone].filter((value): value is string =>
+            Boolean(value),
+          )}
+        />
+        <Info
+          label="Email"
+          values={[university.email].filter((value): value is string =>
             Boolean(value),
           )}
         />
@@ -83,16 +174,39 @@ export function UniversityDetail({
         <div>
           <h2 className="text-2xl font-semibold">Available programs</h2>
           <p className="text-sm text-muted-foreground">
-            {university.programs.length} programs
+            {filteredPrograms.length} of {university.programs.length} programs
           </p>
         </div>
+        <div className="flex flex-wrap gap-2" aria-label="Quick program filters">
+          {applicableQuickFilters.map((filter) => {
+            const active = filters[filter.key].includes(filter.value);
+
+            return (
+              <Button
+                key={filter.label}
+                type="button"
+                size="sm"
+                variant={active ? "default" : "outline"}
+                aria-pressed={active}
+                onClick={() => toggleFilter(filter.key, filter.value)}
+              >
+                {filter.label}
+              </Button>
+            );
+          })}
+        </div>
         <div className="grid gap-3">
-          {university.programs.map((program, index) => (
+          {filteredPrograms.map((program, index) => (
             <article
               key={`${university.id}-${program.id ?? index}`}
               className="min-w-0 border p-4"
             >
               <div className="flex flex-wrap gap-1.5">
+          {filteredPrograms.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No programs match the selected filters.
+            </p>
+          )}
                 <Badge>{program.degree}</Badge>
                 <Badge variant="secondary">
                   {program.applicationTrack} ({program.trackType})

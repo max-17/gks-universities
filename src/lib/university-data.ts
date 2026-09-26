@@ -11,6 +11,7 @@ export type UniversityDetailData = UniversityCardData & {
   nameKr: string | null;
   websiteUrl: string | null;
   phone: string | null;
+  email: string | null;
   remarks: string | null;
   programs: UniversityProgram[];
 };

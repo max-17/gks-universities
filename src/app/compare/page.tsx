@@ -83,7 +83,18 @@ function CompareContent() {
             <div className="grid auto-cols-[100%] grid-flow-col gap-4 overflow-x-auto snap-x snap-mandatory pb-4 md:auto-cols-fr md:grid-flow-col">
               {universities.map((university) => (
                 <div key={university.id} className="min-w-0 snap-start">
-                  <UniversityDetail university={university} />
+                  <UniversityDetail
+                    university={university}
+                    initialFilters={{
+                      applicationTracks: [],
+                      trackTypes: [],
+                      degrees: [],
+                      departments: [],
+                      fields: [],
+                      locations: [],
+                      mediums: [],
+                    }}
+                  />
                 </div>
               ))}
             </div>

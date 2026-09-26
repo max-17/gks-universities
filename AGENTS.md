@@ -14,3 +14,7 @@ use bun to run commands
 
 - Use installed shadcn components as-is without custom sizing, radius, border, spacing, or focus styling.
 - Only change shadcn component colors when a custom color is required.
+
+## Terminal validation
+
+- When terminal command execution is unavailable or blocked, explicitly tell the user to run the required `bun` command and share its output. Do not claim that lint, typecheck, tests, or builds were run unless they actually completed.

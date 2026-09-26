@@ -1,6 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Filter, GraduationCap, LoaderCircle, Search } from "lucide-react";
 import Link from "next/link";
@@ -34,9 +40,12 @@ async function fetchUniversities(): Promise<UniversityCardData[]> {
 }
 
 const checkboxFilterParams = {
+  departments: "department",
   applicationTracks: "applicationTrack",
   trackTypes: "trackType",
   degrees: "degree",
+  fields: "field",
+  locations: "location",
   mediums: "medium",
 } as const;
 
@@ -44,8 +53,15 @@ function HomeContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
-  const [departments, setDepartments] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.departments),
+  );
   const [applicationTracks, setApplicationTracks] = useState<string[]>(() =>
     searchParams.getAll(checkboxFilterParams.applicationTracks),
   );
@@ -55,8 +71,12 @@ function HomeContent() {
   const [degrees, setDegrees] = useState<string[]>(() =>
     searchParams.getAll(checkboxFilterParams.degrees),
   );
-  const [fields, setFields] = useState<string[]>([]);
-  const [locations, setLocations] = useState<string[]>([]);
+  const [fields, setFields] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.fields),
+  );
+  const [locations, setLocations] = useState<string[]>(() =>
+    searchParams.getAll(checkboxFilterParams.locations),
+  );
   const [mediums, setMediums] = useState<string[]>(() =>
     searchParams.getAll(checkboxFilterParams.mediums),
   );
@@ -76,11 +96,18 @@ function HomeContent() {
     applicationTracks.forEach((value) =>
       params.append(checkboxFilterParams.applicationTracks, value),
     );
+    departments.forEach((value) =>
+      params.append(checkboxFilterParams.departments, value),
+    );
     trackTypes.forEach((value) =>
       params.append(checkboxFilterParams.trackTypes, value),
     );
     degrees.forEach((value) =>
       params.append(checkboxFilterParams.degrees, value),
+    );
+    fields.forEach((value) => params.append(checkboxFilterParams.fields, value));
+    locations.forEach((value) =>
+      params.append(checkboxFilterParams.locations, value),
     );
     mediums.forEach((value) =>
       params.append(checkboxFilterParams.mediums, value),
@@ -95,7 +122,10 @@ function HomeContent() {
     }
   }, [
     applicationTracks,
+    departments,
     degrees,
+    fields,
+    locations,
     mediums,
     pathname,
     router,
@@ -174,7 +204,7 @@ function HomeContent() {
   const filteredUniversities = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
 
-    return universities.filter((university) => {
+    return universities.flatMap((university) => {
       const matchesSearch =
         !normalizedSearch ||
         [
@@ -188,7 +218,7 @@ function HomeContent() {
         ].some((value) => value.toLocaleLowerCase().includes(normalizedSearch));
       const matchesLocation =
         locations.length === 0 || locations.includes(university.city);
-      const matchesProgramFilters = university.programFilters.some(
+      const matchingProgramFilters = university.programFilters.filter(
         (program) =>
           (applicationTracks.length === 0 ||
             applicationTracks.includes(program.applicationTrack)) &&
@@ -205,7 +235,15 @@ function HomeContent() {
             )),
       );
 
-      return matchesSearch && matchesLocation && matchesProgramFilters;
+      if (
+        !matchesSearch ||
+        !matchesLocation ||
+        matchingProgramFilters.length === 0
+      ) {
+        return [];
+      }
+
+      return [{ university, matchingProgramFilters }];
     });
   }, [
     applicationTracks,
@@ -218,6 +256,25 @@ function HomeContent() {
     trackTypes,
     universities,
   ]);
+
+  const detailFilterQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    const filters = [
+      [checkboxFilterParams.departments, departments],
+      [checkboxFilterParams.applicationTracks, applicationTracks],
+      [checkboxFilterParams.trackTypes, trackTypes],
+      [checkboxFilterParams.degrees, degrees],
+      [checkboxFilterParams.fields, fields],
+      [checkboxFilterParams.locations, locations],
+      [checkboxFilterParams.mediums, mediums],
+    ] as const;
+
+    filters.forEach(([key, values]) => {
+      values.forEach((value) => params.append(key, value));
+    });
+
+    return params.toString();
+  }, [applicationTracks, departments, degrees, fields, locations, mediums, trackTypes]);
 
   function clearFilters() {
     setDepartments([]);
@@ -377,13 +434,15 @@ function HomeContent() {
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Universities</h2>
               <p className="text-sm text-muted-foreground">
-                {isLoading
-                  ? "Loading..."
-                  : `${filteredUniversities.length} results`}
+                {isMounted
+                  ? isLoading
+                    ? "Loading..."
+                    : `${filteredUniversities.length} results`
+                  : null}
               </p>
             </div>
             <div className="grid gap-4">
-              {isLoading && (
+              {isMounted && isLoading && (
                 <div
                   className="flex min-h-48 items-center justify-center"
                   role="status"
@@ -395,20 +454,25 @@ function HomeContent() {
                   />
                 </div>
               )}
-              {isError && (
+              {isMounted && isError && (
                 <p className="text-sm text-destructive">
                   Unable to load universities. Please try again.
                 </p>
               )}
-              {!isLoading && !isError && filteredUniversities.length === 0 && (
+              {isMounted &&
+                !isLoading &&
+                !isError &&
+                filteredUniversities.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   No universities match your search.
                 </p>
               )}
-              {filteredUniversities.map((university) => (
+              {filteredUniversities.map(({ university, matchingProgramFilters }) => (
                 <UniversityCard
                   key={university.id}
                   university={university}
+                  detailsHref={`/universities/${university.id}${detailFilterQuery ? `?${detailFilterQuery}` : ""}`}
+                  visibleProgramFilters={matchingProgramFilters}
                   isCompared={compareIds.includes(university.id)}
                   onCompare={() => toggleCompare(university.id)}
                 />
