@@ -443,13 +443,13 @@ function HomeContent() {
               )}
               {filteredUniversities.map(
                 ({ university, matchingProgramFilters }) => (
-                <UniversityCard
-                  key={university.id}
-                  university={university}
-                  visibleProgramFilters={matchingProgramFilters}
-                  isCompared={compareIds.includes(university.id)}
-                  onCompare={() => toggleCompare(university.id)}
-                />
+                  <UniversityCard
+                    key={university.id}
+                    university={university}
+                    visibleProgramFilters={matchingProgramFilters}
+                    isCompared={compareIds.includes(university.id)}
+                    onCompare={() => toggleCompare(university.id)}
+                  />
                 ),
               )}
             </div>
