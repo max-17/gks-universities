@@ -441,14 +441,17 @@ function HomeContent() {
                   No universities match your search.
                 </p>
               )}
-              {filteredUniversities.map((university) => (
+              {filteredUniversities.map(
+                ({ university, matchingProgramFilters }) => (
                 <UniversityCard
                   key={university.id}
                   university={university}
+                  visibleProgramFilters={matchingProgramFilters}
                   isCompared={compareIds.includes(university.id)}
                   onCompare={() => toggleCompare(university.id)}
                 />
-              ))}
+                ),
+              )}
             </div>
           </section>
         </div>

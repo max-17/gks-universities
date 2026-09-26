@@ -54,7 +54,6 @@ export function UniversityDetail({
             filters.degrees.includes(program.degree)) &&
           (filters.departments.length === 0 ||
             filters.departments.includes(program.department)) &&
-<<<<<<< HEAD
           (filters.fields.length === 0 ||
             filters.fields.includes(program.field)) &&
           (filters.mediums.length === 0 ||
@@ -62,12 +61,6 @@ export function UniversityDetail({
               program.medium
                 .toLocaleLowerCase()
                 .includes(medium.toLocaleLowerCase()),
-=======
-          (filters.fields.length === 0 || filters.fields.includes(program.field)) &&
-          (filters.mediums.length === 0 ||
-            filters.mediums.some((medium) =>
-              program.medium.toLocaleLowerCase().includes(medium.toLocaleLowerCase()),
->>>>>>> 89e52b59f1b69fa7b42fb3dfe5fe323f4127409f
             )),
       ),
     [filters, university.programs],
@@ -191,9 +184,6 @@ export function UniversityDetail({
           className="flex flex-wrap gap-2"
           aria-label="Quick program filters"
         >
-=======
-        <div className="flex flex-wrap gap-2" aria-label="Quick program filters">
->>>>>>> 89e52b59f1b69fa7b42fb3dfe5fe323f4127409f
           {applicableQuickFilters.map((filter) => {
             const active = filters[filter.key].includes(filter.value);
 
@@ -218,18 +208,6 @@ export function UniversityDetail({
               className="min-w-0 border p-4"
             >
               <div className="flex flex-wrap gap-1.5">
-                {filteredPrograms.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No programs match the selected filters.
-                  </p>
-                )}
-=======
-          {filteredPrograms.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No programs match the selected filters.
-            </p>
-          )}
->>>>>>> 89e52b59f1b69fa7b42fb3dfe5fe323f4127409f
                 <Badge>{program.degree}</Badge>
                 <Badge variant="secondary">
                   {program.applicationTrack} ({program.trackType})
@@ -254,6 +232,11 @@ export function UniversityDetail({
               </dl>
             </article>
           ))}
+          {filteredPrograms.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No programs match the selected filters.
+            </p>
+          )}
         </div>
       </section>
     </article>

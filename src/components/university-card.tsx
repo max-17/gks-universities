@@ -107,23 +107,19 @@ export function UniversityCard({
   onCompare,
   visibleProgramFilters,
   detailsHref,
-  visibleProgramFilters,
-  detailsHref,
 }: {
   university: UniversityCardData;
   isCompared?: boolean;
   onCompare?: () => void;
   visibleProgramFilters?: UniversityCardData["programFilters"];
   detailsHref?: string;
-  visibleProgramFilters?: UniversityCardData["programFilters"];
-  detailsHref?: string;
 }) {
   const router = useRouter();
   const detailsPath = detailsHref ?? `/universities/${university.id}`;
   const programs = visibleProgramFilters ?? university.programFilters;
-  const departments = [
-    ...new Set(programs.map((program) => program.department)),
-  ];
+  const departments = Array.from(
+    new Set(programs.map((program) => program.department)),
+  );
   const fields = [...new Set(programs.map((program) => program.field))];
 
   function openDetails() {
