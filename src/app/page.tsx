@@ -105,12 +105,6 @@ function HomeContent() {
     degrees.forEach((value) =>
       params.append(checkboxFilterParams.degrees, value),
     );
-    fields.forEach((value) =>
-      params.append(checkboxFilterParams.fields, value),
-    );
-    locations.forEach((value) =>
-      params.append(checkboxFilterParams.locations, value),
-    );
     mediums.forEach((value) =>
       params.append(checkboxFilterParams.mediums, value),
     );
@@ -257,33 +251,6 @@ function HomeContent() {
     search,
     trackTypes,
     universities,
-  ]);
-
-  const detailFilterQuery = useMemo(() => {
-    const params = new URLSearchParams();
-    const filters = [
-      [checkboxFilterParams.departments, departments],
-      [checkboxFilterParams.applicationTracks, applicationTracks],
-      [checkboxFilterParams.trackTypes, trackTypes],
-      [checkboxFilterParams.degrees, degrees],
-      [checkboxFilterParams.fields, fields],
-      [checkboxFilterParams.locations, locations],
-      [checkboxFilterParams.mediums, mediums],
-    ] as const;
-
-    filters.forEach(([key, values]) => {
-      values.forEach((value) => params.append(key, value));
-    });
-
-    return params.toString();
-  }, [
-    applicationTracks,
-    departments,
-    degrees,
-    fields,
-    locations,
-    mediums,
-    trackTypes,
   ]);
 
   function clearFilters() {
@@ -469,26 +436,19 @@ function HomeContent() {
                   Unable to load universities. Please try again.
                 </p>
               )}
-              {isMounted &&
-                !isLoading &&
-                !isError &&
-                filteredUniversities.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No universities match your search.
-                  </p>
-                )}
-              {filteredUniversities.map(
-                ({ university, matchingProgramFilters }) => (
-                  <UniversityCard
-                    key={university.id}
-                    university={university}
-                    detailsHref={`/universities/${university.id}${detailFilterQuery ? `?${detailFilterQuery}` : ""}`}
-                    visibleProgramFilters={matchingProgramFilters}
-                    isCompared={compareIds.includes(university.id)}
-                    onCompare={() => toggleCompare(university.id)}
-                  />
-                ),
+              {!isLoading && !isError && filteredUniversities.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No universities match your search.
+                </p>
               )}
+              {filteredUniversities.map((university) => (
+                <UniversityCard
+                  key={university.id}
+                  university={university}
+                  isCompared={compareIds.includes(university.id)}
+                  onCompare={() => toggleCompare(university.id)}
+                />
+              ))}
             </div>
           </section>
         </div>

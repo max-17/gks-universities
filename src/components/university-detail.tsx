@@ -61,6 +61,12 @@ export function UniversityDetail({
               program.medium
                 .toLocaleLowerCase()
                 .includes(medium.toLocaleLowerCase()),
+=======
+          (filters.fields.length === 0 || filters.fields.includes(program.field)) &&
+          (filters.mediums.length === 0 ||
+            filters.mediums.some((medium) =>
+              program.medium.toLocaleLowerCase().includes(medium.toLocaleLowerCase()),
+>>>>>>> 89e52b59f1b69fa7b42fb3dfe5fe323f4127409f
             )),
       ),
     [filters, university.programs],

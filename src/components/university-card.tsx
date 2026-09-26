@@ -107,10 +107,14 @@ export function UniversityCard({
   onCompare,
   visibleProgramFilters,
   detailsHref,
+  visibleProgramFilters,
+  detailsHref,
 }: {
   university: UniversityCardData;
   isCompared?: boolean;
   onCompare?: () => void;
+  visibleProgramFilters?: UniversityCardData["programFilters"];
+  detailsHref?: string;
   visibleProgramFilters?: UniversityCardData["programFilters"];
   detailsHref?: string;
 }) {
@@ -162,6 +166,8 @@ export function UniversityCard({
       </header>
 
       <dl className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <DepartmentDetail departments={departments} />
+        <Detail label="Fields of study" values={fields} />
         <DepartmentDetail departments={departments} />
         <Detail label="Fields of study" values={fields} />
         <Detail label="Medium" values={university.mediums} />
