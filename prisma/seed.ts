@@ -132,10 +132,7 @@ async function importRow(data: Record<string, string>) {
         websiteUrl: data["website url for detailed information"] || undefined,
         phone: data["telephone for detailed information"] || undefined,
         email:
-          data["email"] ||
-          data["e-mail"] ||
-          data["email address"] ||
-          undefined,
+          data["email"] || data["e-mail"] || data["email address"] || undefined,
         remarks: data["remarks"] || undefined,
       },
       create: {
@@ -144,8 +141,7 @@ async function importRow(data: Record<string, string>) {
         location: data["campus location"],
         websiteUrl: data["website url for detailed information"],
         phone: data["telephone for detailed information"],
-        email:
-          data["email"] || data["e-mail"] || data["email address"] || null,
+        email: data["email"] || data["e-mail"] || data["email address"] || null,
         remarks: data["remarks"],
       },
     });

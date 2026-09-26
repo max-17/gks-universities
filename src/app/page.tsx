@@ -105,7 +105,9 @@ function HomeContent() {
     degrees.forEach((value) =>
       params.append(checkboxFilterParams.degrees, value),
     );
-    fields.forEach((value) => params.append(checkboxFilterParams.fields, value));
+    fields.forEach((value) =>
+      params.append(checkboxFilterParams.fields, value),
+    );
     locations.forEach((value) =>
       params.append(checkboxFilterParams.locations, value),
     );
@@ -274,7 +276,15 @@ function HomeContent() {
     });
 
     return params.toString();
-  }, [applicationTracks, departments, degrees, fields, locations, mediums, trackTypes]);
+  }, [
+    applicationTracks,
+    departments,
+    degrees,
+    fields,
+    locations,
+    mediums,
+    trackTypes,
+  ]);
 
   function clearFilters() {
     setDepartments([]);
@@ -463,20 +473,22 @@ function HomeContent() {
                 !isLoading &&
                 !isError &&
                 filteredUniversities.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No universities match your search.
-                </p>
+                  <p className="text-sm text-muted-foreground">
+                    No universities match your search.
+                  </p>
+                )}
+              {filteredUniversities.map(
+                ({ university, matchingProgramFilters }) => (
+                  <UniversityCard
+                    key={university.id}
+                    university={university}
+                    detailsHref={`/universities/${university.id}${detailFilterQuery ? `?${detailFilterQuery}` : ""}`}
+                    visibleProgramFilters={matchingProgramFilters}
+                    isCompared={compareIds.includes(university.id)}
+                    onCompare={() => toggleCompare(university.id)}
+                  />
+                ),
               )}
-              {filteredUniversities.map(({ university, matchingProgramFilters }) => (
-                <UniversityCard
-                  key={university.id}
-                  university={university}
-                  detailsHref={`/universities/${university.id}${detailFilterQuery ? `?${detailFilterQuery}` : ""}`}
-                  visibleProgramFilters={matchingProgramFilters}
-                  isCompared={compareIds.includes(university.id)}
-                  onCompare={() => toggleCompare(university.id)}
-                />
-              ))}
             </div>
           </section>
         </div>

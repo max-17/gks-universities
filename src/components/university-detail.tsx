@@ -54,10 +54,13 @@ export function UniversityDetail({
             filters.degrees.includes(program.degree)) &&
           (filters.departments.length === 0 ||
             filters.departments.includes(program.department)) &&
-          (filters.fields.length === 0 || filters.fields.includes(program.field)) &&
+          (filters.fields.length === 0 ||
+            filters.fields.includes(program.field)) &&
           (filters.mediums.length === 0 ||
             filters.mediums.some((medium) =>
-              program.medium.toLocaleLowerCase().includes(medium.toLocaleLowerCase()),
+              program.medium
+                .toLocaleLowerCase()
+                .includes(medium.toLocaleLowerCase()),
             )),
       ),
     [filters, university.programs],
@@ -177,7 +180,10 @@ export function UniversityDetail({
             {filteredPrograms.length} of {university.programs.length} programs
           </p>
         </div>
-        <div className="flex flex-wrap gap-2" aria-label="Quick program filters">
+        <div
+          className="flex flex-wrap gap-2"
+          aria-label="Quick program filters"
+        >
           {applicableQuickFilters.map((filter) => {
             const active = filters[filter.key].includes(filter.value);
 
@@ -202,11 +208,11 @@ export function UniversityDetail({
               className="min-w-0 border p-4"
             >
               <div className="flex flex-wrap gap-1.5">
-          {filteredPrograms.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No programs match the selected filters.
-            </p>
-          )}
+                {filteredPrograms.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No programs match the selected filters.
+                  </p>
+                )}
                 <Badge>{program.degree}</Badge>
                 <Badge variant="secondary">
                   {program.applicationTrack} ({program.trackType})

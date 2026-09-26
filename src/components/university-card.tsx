@@ -117,7 +117,9 @@ export function UniversityCard({
   const router = useRouter();
   const detailsPath = detailsHref ?? `/universities/${university.id}`;
   const programs = visibleProgramFilters ?? university.programFilters;
-  const departments = [...new Set(programs.map((program) => program.department))];
+  const departments = [
+    ...new Set(programs.map((program) => program.department)),
+  ];
   const fields = [...new Set(programs.map((program) => program.field))];
 
   function openDetails() {
