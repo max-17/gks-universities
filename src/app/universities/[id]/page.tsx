@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 
-import { UniversityDetail } from "@/components/university-detail";
+import {
+  UniversityDetail,
+  type UniversityDetailFilters,
+} from "@/components/university-detail";
 import type { UniversityDetailData } from "@/lib/university-data";
 import { db } from "@/lib/prisma";
 
@@ -70,6 +73,7 @@ async function getUniversity(id: string): Promise<UniversityDetailData | null> {
     nameKr: university.nameKr,
     websiteUrl: university.websiteUrl,
     phone: university.phone,
+    email: university.email,
     remarks: university.remarks,
     departments,
     fields,
@@ -103,15 +107,34 @@ async function getUniversity(id: string): Promise<UniversityDetailData | null> {
 
 export default async function UniversityPage({
   params,
+  searchParams,
 }: PageProps<"/universities/[id]">) {
   const { id } = await params;
+  const query = await searchParams;
   const university = await getUniversity(id);
   if (!university) notFound();
+
+  const getValues = (key: string) => {
+    const value = query?.[key];
+    return value ? (Array.isArray(value) ? value : [value]) : [];
+  };
+  const initialFilters: UniversityDetailFilters = {
+    applicationTracks: getValues("applicationTrack"),
+    trackTypes: getValues("trackType"),
+    degrees: getValues("degree"),
+    departments: getValues("department"),
+    fields: getValues("field"),
+    locations: getValues("location"),
+    mediums: getValues("medium"),
+  };
 
   return (
     <main className="min-h-screen">
       <div className="mx-auto w-full max-w-5xl p-5 sm:p-8">
-        <UniversityDetail university={university} />
+        <UniversityDetail
+          university={university}
+          initialFilters={initialFilters}
+        />
       </div>
     </main>
   );

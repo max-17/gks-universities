@@ -105,13 +105,20 @@ export function UniversityCard({
   university,
   isCompared = false,
   onCompare,
+  visibleProgramFilters,
+  detailsHref,
 }: {
   university: UniversityCardData;
   isCompared?: boolean;
   onCompare?: () => void;
+  visibleProgramFilters?: UniversityCardData["programFilters"];
+  detailsHref?: string;
 }) {
   const router = useRouter();
-  const detailsPath = `/universities/${university.id}`;
+  const detailsPath = detailsHref ?? `/universities/${university.id}`;
+  const programs = visibleProgramFilters ?? university.programFilters;
+  const departments = [...new Set(programs.map((program) => program.department))];
+  const fields = [...new Set(programs.map((program) => program.field))];
 
   function openDetails() {
     router.push(detailsPath);
@@ -153,8 +160,8 @@ export function UniversityCard({
       </header>
 
       <dl className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <DepartmentDetail departments={university.departments} />
-        <Detail label="Field of study" values={university.fields} />
+        <DepartmentDetail departments={departments} />
+        <Detail label="Fields of study" values={fields} />
         <Detail label="Medium" values={university.mediums} />
       </dl>
 

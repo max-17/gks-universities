@@ -36,6 +36,7 @@ model University {
   nameEn     String
   websiteUrl String?
   phone      String?
+  email      String?
   remarks    String?
   location   String?
   programs   GksProgram[]

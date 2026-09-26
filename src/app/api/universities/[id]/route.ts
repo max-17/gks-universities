@@ -78,6 +78,7 @@ export async function GET(
     nameKr: university.nameKr,
     websiteUrl: university.websiteUrl,
     phone: university.phone,
+    email: university.email,
     remarks: university.remarks,
     departments,
     fields,
