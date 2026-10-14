@@ -32,20 +32,46 @@ function Value({ value }: { value: string | number | null }) {
   return <span>{value || "Not specified"}</span>;
 }
 
+function matchesProgramSearch(
+  program: UniversityDetailData["programs"][number],
+  search: string,
+) {
+  return [
+    program.department,
+    program.field,
+    program.degree,
+    program.applicationTrack,
+    program.trackType,
+    program.medium,
+  ].some((value) => value.toLocaleLowerCase().includes(search));
+}
+
 export function UniversityDetail({
   university,
   initialFilters,
+  initialSearch = "",
 }: {
   university: UniversityDetailData;
   initialFilters: UniversityDetailFilters;
+  initialSearch?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const [filters, setFilters] = useState(initialFilters);
+  const normalizedSearch = initialSearch.trim().toLocaleLowerCase();
+  const searchAppliesToPrograms =
+    !normalizedSearch ||
+    university.programs.some((program) =>
+      matchesProgramSearch(program, normalizedSearch),
+    );
   const filteredPrograms = useMemo(
     () =>
       university.programs.filter(
         (program) =>
+          (!searchAppliesToPrograms ||
+            matchesProgramSearch(program, normalizedSearch)) &&
+          (filters.locations.length === 0 ||
+            filters.locations.includes(university.city)) &&
           (filters.applicationTracks.length === 0 ||
             filters.applicationTracks.includes(program.applicationTrack)) &&
           (filters.trackTypes.length === 0 ||
@@ -63,7 +89,13 @@ export function UniversityDetail({
                 .includes(medium.toLocaleLowerCase()),
             )),
       ),
-    [filters, university.programs],
+    [
+      filters,
+      normalizedSearch,
+      searchAppliesToPrograms,
+      university.city,
+      university.programs,
+    ],
   );
   const applicableQuickFilters = quickFilters.filter((filter) =>
     university.programs.some((program) => {
@@ -98,6 +130,7 @@ export function UniversityDetail({
     Object.entries(nextFilters).forEach(([filterKey, values]) => {
       values.forEach((item) => params.append(filterKey.slice(0, -1), item));
     });
+    if (initialSearch.trim()) params.set("search", initialSearch.trim());
 
     setFilters(nextFilters);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });

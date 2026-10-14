@@ -105,6 +105,12 @@ function HomeContent() {
     degrees.forEach((value) =>
       params.append(checkboxFilterParams.degrees, value),
     );
+    fields.forEach((value) =>
+      params.append(checkboxFilterParams.fields, value),
+    );
+    locations.forEach((value) =>
+      params.append(checkboxFilterParams.locations, value),
+    );
     mediums.forEach((value) =>
       params.append(checkboxFilterParams.mediums, value),
     );
@@ -251,6 +257,35 @@ function HomeContent() {
     search,
     trackTypes,
     universities,
+  ]);
+
+  const detailsFilterQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    const filters = [
+      [checkboxFilterParams.departments, departments],
+      [checkboxFilterParams.applicationTracks, applicationTracks],
+      [checkboxFilterParams.trackTypes, trackTypes],
+      [checkboxFilterParams.degrees, degrees],
+      [checkboxFilterParams.fields, fields],
+      [checkboxFilterParams.locations, locations],
+      [checkboxFilterParams.mediums, mediums],
+    ] as const;
+
+    if (search.trim()) params.set("search", search.trim());
+    filters.forEach(([key, values]) => {
+      values.forEach((value) => params.append(key, value));
+    });
+
+    return params.toString();
+  }, [
+    applicationTracks,
+    degrees,
+    departments,
+    fields,
+    locations,
+    mediums,
+    search,
+    trackTypes,
   ]);
 
   function clearFilters() {
@@ -446,6 +481,7 @@ function HomeContent() {
                   <UniversityCard
                     key={university.id}
                     university={university}
+                    detailsHref={`/universities/${university.id}${detailsFilterQuery ? `?${detailsFilterQuery}` : ""}`}
                     visibleProgramFilters={matchingProgramFilters}
                     isCompared={compareIds.includes(university.id)}
                     onCompare={() => toggleCompare(university.id)}

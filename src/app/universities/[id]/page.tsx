@@ -127,6 +127,10 @@ export default async function UniversityPage({
     locations: getValues("location"),
     mediums: getValues("medium"),
   };
+  const searchValue = query?.search;
+  const initialSearch = Array.isArray(searchValue)
+    ? (searchValue[0] ?? "")
+    : (searchValue ?? "");
 
   return (
     <main className="min-h-screen">
@@ -134,6 +138,7 @@ export default async function UniversityPage({
         <UniversityDetail
           university={university}
           initialFilters={initialFilters}
+          initialSearch={initialSearch}
         />
       </div>
     </main>
