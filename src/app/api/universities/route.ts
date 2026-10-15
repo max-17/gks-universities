@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/prisma";
+import { filterUniversities } from "@/lib/university-api-filters";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+};
+
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
 
 function formatEnumValue(value: string) {
   return value
@@ -13,7 +23,7 @@ function formatTrackType(value: string) {
   return value === "UIC" ? "UIC" : formatEnumValue(value);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const universities = await db.university.findMany({
     orderBy: { nameEn: "asc" },
     include: {
@@ -93,5 +103,8 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json(
+    filterUniversities(result, new URL(request.url).searchParams),
+    { headers: corsHeaders },
+  );
 }
