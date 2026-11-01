@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,6 @@ export function UniversityDetail({
   initialFilters: UniversityDetailFilters;
   initialSearch?: string;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
   const [filters, setFilters] = useState(initialFilters);
   const normalizedSearch = initialSearch.trim().toLocaleLowerCase();
@@ -133,7 +132,12 @@ export function UniversityDetail({
     if (initialSearch.trim()) params.set("search", initialSearch.trim());
 
     setFilters(nextFilters);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${pathname}${query ? `?${query}` : ""}`,
+    );
   }
 
   return (

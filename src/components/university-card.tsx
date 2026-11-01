@@ -2,8 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GitCompareArrows } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { KeyboardEvent, MouseEvent } from "react";
 
 export type UniversityCardData = {
   id: string;
@@ -114,7 +112,6 @@ export function UniversityCard({
   visibleProgramFilters?: UniversityCardData["programFilters"];
   detailsHref?: string;
 }) {
-  const router = useRouter();
   const detailsPath = detailsHref ?? `/universities/${university.id}`;
   const programs = visibleProgramFilters ?? university.programFilters;
   const departments = Array.from(
@@ -122,35 +119,16 @@ export function UniversityCard({
   );
   const fields = [...new Set(programs.map((program) => program.field))];
 
-  function openDetails() {
-    router.push(detailsPath);
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openDetails();
-    }
-  }
-
-  function stopCardNavigation(event: MouseEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-  }
-
   return (
     <article
-      className={`flex min-w-0 cursor-pointer flex-col gap-4 rounded-xl border-2 bg-card p-4 text-card-foreground shadow-sm transition-colors hover:border-primary/60 sm:gap-5 sm:p-5 ${isCompared ? "border-primary" : "border-border"}`}
-      onClick={openDetails}
-      onKeyDown={handleKeyDown}
-      role="link"
-      tabIndex={0}
-      aria-label={`View details for ${university.name}`}
+      className={`relative flex min-w-0 flex-col gap-4 rounded-xl border-2 bg-card p-4 text-card-foreground shadow-sm transition-colors hover:border-primary/60 sm:gap-5 sm:p-5 ${isCompared ? "border-primary" : "border-border"}`}
     >
       <header className="flex min-w-0 flex-col gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <Link
             href={detailsPath}
-            className="wrap-break-word text-lg font-semibold leading-tight hover:underline sm:text-xl"
+            prefetch={false}
+            className="min-h-6 wrap-break-word text-lg font-semibold leading-tight hover:underline after:absolute after:inset-0 sm:text-xl"
           >
             {university.name}
           </Link>
@@ -164,21 +142,16 @@ export function UniversityCard({
       <dl className="grid min-w-0 gap-4 sm:grid-cols-2">
         <DepartmentDetail departments={departments} />
         <Detail label="Fields of study" values={fields} />
-        <DepartmentDetail departments={departments} />
-        <Detail label="Fields of study" values={fields} />
         <Detail label="Medium" values={university.mediums} />
       </dl>
 
-      <footer className="flex flex-wrap items-center justify-end gap-2 border-t pt-4">
+      <footer className="relative z-10 flex flex-wrap items-center justify-end gap-2 border-t pt-4">
         {onCompare && (
           <Button
             type="button"
             variant={isCompared ? "secondary" : "outline"}
             size="sm"
-            onClick={(event) => {
-              stopCardNavigation(event);
-              onCompare();
-            }}
+            onClick={onCompare}
           >
             <GitCompareArrows className="size-4" />
             {isCompared ? "Added to compare" : "Compare"}

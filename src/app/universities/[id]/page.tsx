@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
+import { cache, Suspense } from "react";
 import { notFound } from "next/navigation";
+import { UniversityDetailQuery } from "@/components/university-detail-query";
+import { siteUrl } from "@/lib/seo";
 
 import {
   UniversityDetail,
@@ -7,7 +11,7 @@ import {
 import type { UniversityDetailData } from "@/lib/university-data";
 import { db } from "@/lib/prisma";
 
-async function getUniversity(id: string): Promise<UniversityDetailData | null> {
+const getUniversity = cache(async (id: string): Promise<UniversityDetailData | null> => {
   const university = await db.university.findUnique({
     where: { id },
     include: {
@@ -103,43 +107,42 @@ async function getUniversity(id: string): Promise<UniversityDetailData | null> {
       programStart: program.programStart,
     })),
   };
-}
+});
 
-export default async function UniversityPage({
-  params,
-  searchParams,
-}: PageProps<"/universities/[id]">) {
+export const revalidate = 3600;
+export async function generateStaticParams() {
+  return db.university.findMany({ select: { id: true } });
+}
+export async function generateMetadata({ params }: PageProps<"/universities/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const query = await searchParams;
   const university = await getUniversity(id);
   if (!university) notFound();
-
-  const getValues = (key: string) => {
-    const value = query?.[key];
-    return value ? (Array.isArray(value) ? value : [value]) : [];
-  };
+  const title = `${university.name} | GKS Scholarship Programs`;
+  const description = `Explore Global Korea Scholarship programs at ${university.name}${university.city ? ` in ${university.city}` : ""}. Compare departments, degrees, application tracks and teaching languages.`;
+  const url = `${siteUrl}/universities/${id}`;
+  return { title, description, alternates: { canonical: url },
+    openGraph: { title, description, url, type: "website" },
+    twitter: { card: "summary", title, description } };
+}
+export default async function UniversityPage({ params }: PageProps<"/universities/[id]">) {
+  const { id } = await params;
+  const university = await getUniversity(id);
+  if (!university) notFound();
   const initialFilters: UniversityDetailFilters = {
-    applicationTracks: getValues("applicationTrack"),
-    trackTypes: getValues("trackType"),
-    degrees: getValues("degree"),
-    departments: getValues("department"),
-    fields: getValues("field"),
-    locations: getValues("location"),
-    mediums: getValues("medium"),
+    applicationTracks: [], trackTypes: [], degrees: [], departments: [], fields: [], locations: [], mediums: [],
   };
-  const searchValue = query?.search;
-  const initialSearch = Array.isArray(searchValue)
-    ? (searchValue[0] ?? "")
-    : (searchValue ?? "");
-
+  const structuredData = {
+    "@context": "https://schema.org", "@type": "CollegeOrUniversity", name: university.name,
+    alternateName: university.nameKr || undefined, url: `${siteUrl}/universities/${id}`,
+    address: university.city ? { "@type": "PostalAddress", addressLocality: university.city, addressCountry: "KR" } : undefined,
+  };
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <div className="mx-auto w-full max-w-5xl p-5 sm:p-8">
-        <UniversityDetail
-          university={university}
-          initialFilters={initialFilters}
-          initialSearch={initialSearch}
-        />
+        <Suspense fallback={<UniversityDetail university={university} initialFilters={initialFilters} />}>
+          <UniversityDetailQuery university={university} />
+        </Suspense>
       </div>
     </main>
   );

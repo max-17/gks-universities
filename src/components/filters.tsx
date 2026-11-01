@@ -37,6 +37,7 @@ export function FilterCombobox({
             </ComboboxChip>
           ))}
           <ComboboxChipsInput
+            aria-label={label}
             className="basis-full min-w-0"
             placeholder={
               value.length ? "Add more" : `Select ${label.toLowerCase()}`
@@ -81,7 +82,7 @@ export function FilterCheckboxGroup({
                 onChange(
                   checked
                     ? [...value, option]
-                    : value.filter((item) => item !== option)
+                    : value.filter((item) => item !== option),
                 );
               }}
             />
