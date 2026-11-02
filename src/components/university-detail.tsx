@@ -238,14 +238,14 @@ export function UniversityDetail({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor={programSearchId} className="text-sm font-medium">
+          <label htmlFor={programSearchId} className="sr-only">
             Search majors and departments
           </label>
           <div className="flex items-center gap-2">
             <Input
               id={programSearchId}
               type="search"
-              placeholder="e.g. Computer Science or Engineering"
+              placeholder="Search majors or departments…"
               value={programSearch}
               onChange={(event) => setProgramSearch(event.target.value)}
             />
