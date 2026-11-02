@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Providers } from "@/app/providers";
 
 export const metadata: Metadata = {
   title: "Compare universities",
@@ -11,5 +12,5 @@ export default function CompareLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <Providers>{children}</Providers>;
 }

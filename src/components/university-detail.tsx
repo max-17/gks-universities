@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useId, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { UniversityDetailData } from "@/lib/university-data";
 
 export type UniversityDetailFilters = {
@@ -56,7 +57,21 @@ export function UniversityDetail({
   initialSearch?: string;
 }) {
   const pathname = usePathname();
-  const [filters, setFilters] = useState(initialFilters);
+  const filterSignature = JSON.stringify(initialFilters);
+  const [filterState, setFilterState] = useState({
+    signature: filterSignature,
+    filters: initialFilters,
+  });
+  const filters =
+    filterState.signature === filterSignature
+      ? filterState.filters
+      : initialFilters;
+  const [programSearch, setProgramSearch] = useState("");
+  const programSearchId = useId();
+  const deferredProgramSearch = useDeferredValue(programSearch);
+  const normalizedProgramSearch = deferredProgramSearch
+    .trim()
+    .toLocaleLowerCase();
   const normalizedSearch = initialSearch.trim().toLocaleLowerCase();
   const searchAppliesToPrograms =
     !normalizedSearch ||
@@ -67,6 +82,10 @@ export function UniversityDetail({
     () =>
       university.programs.filter(
         (program) =>
+          (!normalizedProgramSearch ||
+            [program.department, program.field].some((value) =>
+              value.toLocaleLowerCase().includes(normalizedProgramSearch),
+            )) &&
           (!searchAppliesToPrograms ||
             matchesProgramSearch(program, normalizedSearch)) &&
           (filters.locations.length === 0 ||
@@ -91,6 +110,7 @@ export function UniversityDetail({
     [
       filters,
       normalizedSearch,
+      normalizedProgramSearch,
       searchAppliesToPrograms,
       university.city,
       university.programs,
@@ -131,7 +151,7 @@ export function UniversityDetail({
     });
     if (initialSearch.trim()) params.set("search", initialSearch.trim());
 
-    setFilters(nextFilters);
+    setFilterState({ signature: filterSignature, filters: nextFilters });
     const query = params.toString();
     window.history.replaceState(
       null,
@@ -213,9 +233,28 @@ export function UniversityDetail({
       <section className="flex flex-col gap-4">
         <div>
           <h2 className="text-2xl font-semibold">Available programs</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground" role="status">
             {filteredPrograms.length} of {university.programs.length} programs
           </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor={programSearchId} className="text-sm font-medium">
+            Search majors and departments
+          </label>
+          <div className="flex items-center gap-2">
+            <Input
+              id={programSearchId}
+              type="search"
+              placeholder="e.g. Computer Science or Engineering"
+              value={programSearch}
+              onChange={(event) => setProgramSearch(event.target.value)}
+            />
+            {programSearch && (
+              <Button variant="ghost" onClick={() => setProgramSearch("")}>
+                Clear search
+              </Button>
+            )}
+          </div>
         </div>
         <div
           className="flex flex-wrap gap-2"
@@ -238,11 +277,22 @@ export function UniversityDetail({
             );
           })}
         </div>
-        <div className="grid gap-3">
+        <div
+          className="grid gap-3"
+          aria-busy={programSearch !== deferredProgramSearch}
+        >
           {filteredPrograms.map((program, index) => (
             <article
               key={`${university.id}-${program.id ?? index}`}
               className="min-w-0 border p-4"
+              style={
+                index < 3
+                  ? undefined
+                  : {
+                      contentVisibility: "auto",
+                      containIntrinsicSize: "auto 280px",
+                    }
+              }
             >
               <div className="flex flex-wrap gap-1.5">
                 <Badge>{program.degree}</Badge>
@@ -271,7 +321,8 @@ export function UniversityDetail({
           ))}
           {filteredPrograms.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No programs match the selected filters.
+              No programs match your search and filters. Try another major or
+              department, or clear your filters.
             </p>
           )}
         </div>

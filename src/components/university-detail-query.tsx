@@ -25,7 +25,7 @@ export function UniversityDetailQuery({
 
   return (
     <UniversityDetail
-      key={query.toString()}
+      key={university.id}
       university={university}
       initialFilters={initialFilters}
       initialSearch={query.get("search") ?? ""}

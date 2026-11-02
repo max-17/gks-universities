@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./providers";
 import { cn } from "@/lib/utils";
 import { siteName, siteUrl } from "@/lib/seo";
 
@@ -43,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn("h-full", "antialiased", geistSans.variable, "font-sans")}
     >
       <body className="flex min-h-full flex-col overflow-x-hidden">
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   );
