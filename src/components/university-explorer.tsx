@@ -1,26 +1,41 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Filter, GraduationCap, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { FilterCheckboxGroup, FilterCombobox } from "@/components/filters";
+import type { UniversityFilterValues } from "@/components/university-filter-panel";
 import {
   UniversityCard,
   type UniversityCardData,
 } from "@/components/university-card";
 import { Input } from "@/components/ui/input";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+const UniversityFilterPanel = lazy(
+  () => import("@/components/university-filter-panel"),
+);
+const desktopMediaQuery = "(min-width: 64rem)";
+function subscribeToDesktop(onChange: () => void) {
+  const query = window.matchMedia(desktopMediaQuery);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+function getDesktopSnapshot() {
+  return window.matchMedia(desktopMediaQuery).matches;
+}
+function getServerDesktopSnapshot() {
+  return false;
+}
 
 const checkboxFilterParams = {
   departments: "department",
@@ -40,6 +55,15 @@ function HomeContent({
   query?: string;
 }) {
   const pathname = usePathname();
+  const isDesktop = useSyncExternalStore(
+    subscribeToDesktop,
+    getDesktopSnapshot,
+    getServerDesktopSnapshot,
+  );
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileFiltersRequested, setMobileFiltersRequested] = useState(false);
+  const mobileFiltersId = useId();
+  const mobileFiltersTrigger = useRef<HTMLButtonElement>(null);
   const searchParams = useMemo(() => new URLSearchParams(query), [query]);
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [departments, setDepartments] = useState<string[]>(() =>
@@ -118,64 +142,6 @@ function HomeContent({
     search,
     trackTypes,
   ]);
-  const departmentOptions = useMemo(
-    () =>
-      [
-        ...new Set(
-          universities.flatMap((university) => university.departments),
-        ),
-      ].sort(),
-    [universities],
-  );
-  const applicationTrackOptions = useMemo(
-    () =>
-      [
-        ...new Set(
-          universities.flatMap((university) => university.applicationTracks),
-        ),
-      ].sort(),
-    [universities],
-  );
-  const trackTypeOptions = useMemo(
-    () =>
-      [
-        ...new Set(universities.flatMap((university) => university.trackTypes)),
-      ].sort(),
-    [universities],
-  );
-  const degreeOptions = useMemo(
-    () =>
-      [
-        ...new Set(universities.flatMap((university) => university.degrees)),
-      ].sort(),
-    [universities],
-  );
-  const fieldOptions = useMemo(
-    () =>
-      [
-        ...new Set(universities.flatMap((university) => university.fields)),
-      ].sort(),
-    [universities],
-  );
-  const locationOptions = useMemo(
-    () =>
-      [
-        ...new Set(
-          universities.map((university) => university.city).filter(Boolean),
-        ),
-      ].sort(),
-    [universities],
-  );
-  const mediumOptions = ["English", "Korean"];
-  const hasActiveFilters =
-    applicationTracks.length > 0 ||
-    trackTypes.length > 0 ||
-    degrees.length > 0 ||
-    fields.length > 0 ||
-    departments.length > 0 ||
-    locations.length > 0 ||
-    mediums.length > 0;
-
   const filteredUniversities = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
 
@@ -279,52 +245,27 @@ function HomeContent({
     });
   }
 
-  const filterContent = (
-    <div className="flex flex-col gap-6 p-5">
-      <FilterCombobox
-        label="Department"
-        value={departments}
-        options={departmentOptions}
-        onChange={setDepartments}
-      />
-      <FilterCheckboxGroup
-        label="Application track"
-        value={applicationTracks}
-        options={applicationTrackOptions}
-        onChange={setApplicationTracks}
-      />
-      <FilterCheckboxGroup
-        label="Track type"
-        value={trackTypes}
-        options={trackTypeOptions}
-        onChange={setTrackTypes}
-      />
-      <FilterCheckboxGroup
-        label="Degree"
-        value={degrees}
-        options={degreeOptions}
-        onChange={setDegrees}
-      />
-      <FilterCombobox
-        label="Field of study"
-        value={fields}
-        options={fieldOptions}
-        onChange={setFields}
-      />
-      <FilterCombobox
-        label="Location"
-        value={locations}
-        options={locationOptions}
-        onChange={setLocations}
-      />
-      <FilterCheckboxGroup
-        label="Medium of instruction"
-        value={mediums}
-        options={mediumOptions}
-        onChange={setMediums}
-      />
-    </div>
-  );
+  const filterValues: UniversityFilterValues = {
+    departments,
+    applicationTracks,
+    trackTypes,
+    degrees,
+    fields,
+    locations,
+    mediums,
+  };
+  function changeFilter(key: keyof UniversityFilterValues, values: string[]) {
+    const setters = {
+      departments: setDepartments,
+      applicationTracks: setApplicationTracks,
+      trackTypes: setTrackTypes,
+      degrees: setDegrees,
+      fields: setFields,
+      locations: setLocations,
+      mediums: setMediums,
+    };
+    setters[key](values);
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -360,22 +301,23 @@ function HomeContent({
       </header>
 
       <aside className="fixed bottom-0 left-0 top-16 hidden w-80 overflow-y-auto border-r bg-background lg:block">
-        {/* filters header */}
-        <div className="flex items-center justify-between gap-4 border-b p-5">
-          <div>
-            <h2 className="text-lg font-semibold">Filters</h2>
-            <p className="text-sm text-muted-foreground">
-              Narrow your search results.
-            </p>
-          </div>
-          {/* clear filters button */}
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              CLEAR ALL
-            </Button>
-          )}
-        </div>
-        {filterContent}
+        {isDesktop && (
+          <Suspense
+            fallback={
+              <p role="status" className="p-5 text-sm text-muted-foreground">
+                Loading filters…
+              </p>
+            }
+          >
+            <UniversityFilterPanel
+              mode="desktop"
+              universities={universities}
+              values={filterValues}
+              onChange={changeFilter}
+              onClear={clearFilters}
+            />
+          </Suspense>
+        )}
       </aside>
 
       <main className="min-h-screen pt-16 lg:pl-80">
@@ -387,37 +329,52 @@ function HomeContent({
                 Find the right university for your scholarship journey.
               </p>
             </div>
-            {/* Drawer */}
-            <Drawer showSwipeHandle>
-              <DrawerTrigger
-                className="lg:hidden"
-                render={<Button variant="outline" />}
-              >
-                FIlters <Filter className="ml-2 h-4 w-4" />
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Filters</DrawerTitle>
-                  <DrawerDescription>
-                    Narrow your search results.
-                  </DrawerDescription>
-                </DrawerHeader>
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                  {filterContent}
-                </div>
-                {hasActiveFilters && (
-                  <DrawerFooter>
-                    <Button
-                      variant="outline"
-                      className="w-full h-10 border-black"
-                      onClick={clearFilters}
+            <Button
+              ref={mobileFiltersTrigger}
+              variant="outline"
+              aria-haspopup="dialog"
+              aria-controls={mobileFiltersId}
+              aria-expanded={mobileFiltersOpen && !isDesktop}
+              onClick={() => {
+                setMobileFiltersRequested(true);
+                setMobileFiltersOpen(true);
+              }}
+              className="lg:hidden"
+            >
+              Filters <Filter aria-hidden="true" />
+            </Button>
+            {!isDesktop && mobileFiltersRequested && (
+              <Suspense
+                fallback={
+                  mobileFiltersOpen ? (
+                    <div
+                      role="status"
+                      className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t bg-background p-5"
                     >
-                      CLEAR ALL
-                    </Button>
-                  </DrawerFooter>
-                )}
-              </DrawerContent>
-            </Drawer>
+                      <p className="text-sm">Loading filters…</p>
+                      <Button
+                        variant="outline"
+                        onClick={() => setMobileFiltersOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : null
+                }
+              >
+                <UniversityFilterPanel
+                  mode="mobile"
+                  id={mobileFiltersId}
+                  triggerRef={mobileFiltersTrigger}
+                  open={mobileFiltersOpen}
+                  onOpenChange={setMobileFiltersOpen}
+                  universities={universities}
+                  values={filterValues}
+                  onChange={changeFilter}
+                  onClear={clearFilters}
+                />
+              </Suspense>
+            )}
           </div>
           <section className="flex flex-col gap-4" aria-label="Universities">
             <div className="flex items-center justify-between gap-4">
